@@ -2362,32 +2362,6 @@ el('xlsGb').addEventListener('click', eksporXlsGb);
 el('xlsSk').addEventListener('click', eksporXlsSk);
 [].forEach.call(document.querySelectorAll('#mainnav button'), function (b) { b.addEventListener('click', function () { pilihMenu(b.getAttribute('data-m')); }); });
 document.addEventListener('visibilitychange', function () { if (!document.hidden) { cekIzin(); muat(); } });
-
-/* ---------- Halaman persetujuan perangkat (link dari email admin) ----------
-   Link ?izin=setujui|tolak&device=..&token=.. memanggil skrip lewat fetch tanpa cookie, jadi tidak terganggu
-   banyak akun Google di HP. Tidak perlu login. Token di link harus cocok dengan yang disimpan skrip. */
-(function () {
-  var q = location.search || '';
-  var m = /[?&]izin=(setujui|tolak)(?:&|$)/.exec(q);
-  if (!m) return;
-  function ambil(k) { var r = new RegExp('[?&]' + k + '=([^&]*)').exec(q); return r ? decodeURIComponent(r[1]) : ''; }
-  var dv = ambil('device'), tk = ambil('token'), aksi = m[1];
-  var kotak = el('login');
-  kotak.innerHTML = '<p class="hint">Persetujuan perangkat</p><p id="izinHasil" role="status">Memproses...</p>';
-  var hasil = el('izinHasil');
-  try { history.replaceState(null, '', location.pathname); } catch (e) {}
-  if (!dv || !tk) { hasil.textContent = 'Link tidak lengkap.'; return; }
-  var batas = new Promise(function (_, no) { setTimeout(function () { no(new Error('tidak ada respon')); }, 15000); });
-  Promise.race([fetch(APPS_SCRIPT_URL + '?action=' + aksi + '&json=1&device=' + encodeURIComponent(dv) + '&token=' + encodeURIComponent(tk),
-    { credentials: 'omit', redirect: 'follow', cache: 'no-store' }), batas])
-    .then(function (r) { return r.text(); })
-    .then(function (t) {
-      var d; try { d = JSON.parse(t); } catch (e) { throw new Error('balasan skrip bukan data'); }
-      hasil.textContent = (d.pesan || 'Selesai.') + (d.nama ? ' (' + d.nama + ')' : '');
-      hasil.className = d.ok ? '' : 'err';
-    })
-    .catch(function (e) { hasil.textContent = 'Gagal memproses: ' + (e && e.message || e) + '. Coba lagi atau ubah Status di sheet Perangkat.'; hasil.className = 'err'; });
-})();
 </script>
 </body>
 </html>
